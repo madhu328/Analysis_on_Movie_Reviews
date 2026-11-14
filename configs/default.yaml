@@ -1,5 +1,5 @@
 seed: 42
-dataset: stanfordnlp/imdb
+dataset: "data/IMDB Dataset.csv"
 validation_fraction: 0.1
 output_dir: artifacts
 max_features: 50000
