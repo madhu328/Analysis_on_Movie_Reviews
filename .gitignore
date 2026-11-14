@@ -1,0 +1,11 @@
+# Datasets, trained model artifacts, sensitive/local configuration
+artifacts/
+data/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+.env
+.ipynb_checkpoints/
+*.zip
+.DS_Store
