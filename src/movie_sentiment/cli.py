@@ -30,7 +30,7 @@ def main():
         print(result.to_string(index=False));return
     random.seed(cfg["seed"]);np.random.seed(cfg["seed"])
     from .data import load_imdb,save_split_manifest
-    train,val,test=load_imdb(cfg["seed"],cfg["validation_fraction"],args.limit)
+    train,val,test=load_imdb(cfg["seed"],cfg["validation_fraction"],args.limit,cfg["dataset"])
     manifest=save_split_manifest(train,val,test,out)
     (out/"run_metadata.json").write_text(json.dumps({"seed":cfg["seed"],"debug_limit":args.limit,"dataset":cfg["dataset"],"split":manifest},indent=2))
     if args.command in ("eda","all"):
