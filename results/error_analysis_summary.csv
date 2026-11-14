@@ -1,0 +1,13 @@
+model,category,errors_matching,total_errors
+bilstm,negation,978,1216
+bilstm,contrast,1050,1216
+bilstm,sarcasm_candidate,220,1216
+bilstm,mixed_sentiment,280,1216
+distilbert,negation,623,777
+distilbert,contrast,686,777
+distilbert,sarcasm_candidate,161,777
+distilbert,mixed_sentiment,174,777
+tfidf_logreg,negation,705,911
+tfidf_logreg,contrast,778,911
+tfidf_logreg,sarcasm_candidate,143,911
+tfidf_logreg,mixed_sentiment,190,911

@@ -1,0 +1,9 @@
+{
+  "model": "distilbert",
+  "accuracy": 0.9216417910447762,
+  "precision": 0.9169976171564734,
+  "recall": 0.9278681936909785,
+  "f1": 0.9224008788574852,
+  "samples": 9916,
+  "positive_class": 1
+}

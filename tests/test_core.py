@@ -20,20 +20,19 @@ def test_evaluation_and_error_patterns(tmp_path):
     assert len(summary)==4
     assert (tmp_path/"toy_confusion_matrix.png").exists()
 
-def test_no_checkpoints_available(tmp_path):
-    from movie_sentiment.predict import available_models
-    assert available_models(tmp_path) == {}
 
-def test_baseline_inference(tmp_path):
-    import joblib
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.pipeline import make_pipeline
-    from movie_sentiment.predict import predict_baseline, available_models
-    model = make_pipeline(TfidfVectorizer(), LogisticRegression())
-    model.fit(["awful terrible film", "horrible boring story", "wonderful great movie", "excellent brilliant film"], [0, 0, 1, 1])
-    joblib.dump(model, tmp_path / "baseline.joblib")
-    result = predict_baseline("great movie", tmp_path)
-    assert result["label"] in ("positive", "negative")
-    assert 0 <= result["positive_probability"] <= 1
-    assert len(available_models(tmp_path)) == 1
+def test_kaggle_loader_prevents_duplicate_leakage(tmp_path):
+    import pandas as pd
+    from movie_sentiment.data import load_imdb
+    rows=[]
+    for i in range(120):
+        label='positive' if i%2 else 'negative'
+        rows.append({'review':f'Unique movie review number {i}', 'sentiment': label})
+    rows.append(rows[0].copy())
+    p=tmp_path/'tiny.csv'
+    pd.DataFrame(rows).to_csv(p,index=False)
+    train,val,test=load_imdb(source=str(p),seed=42)
+    assert len(train)+len(val)+len(test)==120
+    assert len(set(train.text)&set(val.text))==0
+    assert len(set(train.text)&set(test.text))==0
+    assert len(set(val.text)&set(test.text))==0

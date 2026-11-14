@@ -8,21 +8,12 @@ import yaml
 
 def main():
     parser=argparse.ArgumentParser(description="IMDb sentiment project")
-    parser.add_argument("command",choices=["eda","baseline","lstm","transformer","compare","errors","all","predict"])
+    parser.add_argument("command",choices=["eda","baseline","lstm","transformer","compare","errors","all"])
     parser.add_argument("--config",default="configs/default.yaml")
     parser.add_argument("--limit",type=int,default=None,help="DEBUG ONLY: reduced data; not final metrics")
-    parser.add_argument("--text",default=None,help="Review text for predict command")
-    parser.add_argument("--model",choices=["baseline","lstm","transformer"],default="baseline")
     args=parser.parse_args()
     cfg=yaml.safe_load(Path(args.config).read_text())
     out=Path(cfg["output_dir"]);out.mkdir(exist_ok=True,parents=True)
-    if args.command == "predict":
-        if not args.text:
-            parser.error("predict requires --text 'your movie review'")
-        from .predict import predict_baseline, predict_lstm, predict_transformer
-        functions = {"baseline": predict_baseline, "lstm": predict_lstm, "transformer": predict_transformer}
-        print(json.dumps(functions[args.model](args.text, out), indent=2))
-        return
     if args.command in ("compare","errors"):
         from .evaluate import comparison
         from .analysis import analyze_errors

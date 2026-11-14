@@ -2,7 +2,7 @@
 
 A reproducible NLP course project comparing **TF-IDF + Logistic Regression**, **BiLSTM with optional pretrained GloVe embeddings**, and fine-tuned **DistilBERT** for IMDb binary sentiment classification.
 
-> **Status:** Source code and report drafted; full model training and real evaluation are **pending**. Do not present any scores or comparisons as measured until you run experiments. No pretrained model files are distributed here.
+> **Status:** Training and held-out evaluation completed. The real results, figures, error-analysis CSVs, and final PDF report are included in `results/` and `report/`. Trained weights are backed up separately to Google Drive, not included in this repository.
 
 ## Group members
 
@@ -27,9 +27,9 @@ pip install -e '.[deep,test,demo]'
 pytest -q
 ```
 
-**Dataset (Kaggle):** Download `IMDB Dataset.csv` from https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews and save it at `data/IMDB Dataset.csv` (create `data/`). The loader removes duplicate review texts **before** creating stratified partitions: 72% training, 8% validation, 20% held-out test (approximately; precise counts depend on deduplication). Do not upload the dataset to Git; instead upload it separately to Colab or copy from Google Drive. If preferred, edit `dataset` to `stanfordnlp/imdb` for the original Hugging Face official split.
+**Dataset:** Download `IMDB Dataset.csv` from https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews and place at `data/IMDB Dataset.csv`. The Kaggle loader removes duplicate review text before creating stratified training/validation/test splits. Actual split: 35,695 train, 3,967 validation, 9,916 test (49,578 total). Seed 42. For the optional original Stanford split, change `dataset` in YAML to `stanfordnlp/imdb`.
 
-## Training and evaluation (planned for a later session)
+## Training and evaluation (completed experiment; rerun commands below)
 
 ```bash
 imdb-sentiment eda
@@ -46,7 +46,7 @@ To run a quick **debug-only** subset: `imdb-sentiment baseline --limit 1000`. Su
 
 ## Evaluation protocol
 
-All models use the same official test set, seed 42 and training/validation allocation. Logistic Regression chooses C from 0.1, 1 and 10 by validation F1. BiLSTM chooses the best epoch by validation F1 and stops on patience 2. DistilBERT selects the best saved epoch by validation F1. Scores reported are positive-class precision, recall and F1 (threshold 0.5), plus accuracy; see classification reports and confusion matrices. No training on official test examples. Repeated tuning after test evaluation would compromise held-out validity.
+All models use the same held-out Kaggle test partition, seed 42, and training/validation allocation. Logistic Regression chooses C from 0.1, 1 and 10 by validation F1. BiLSTM chooses the best epoch by validation F1 and stops on patience 2. DistilBERT selects the best saved epoch by validation F1. Scores reported are positive-class precision, recall and F1 (threshold 0.5), plus accuracy; see classification reports and confusion matrices. No training on held-out test examples. Repeated tuning after test evaluation would compromise held-out validity.
 
 ## Error analysis
 
@@ -54,106 +54,43 @@ All models use the same official test set, seed 42 and training/validation alloc
 
 ## Interactive demo
 
-Once trained: `streamlit run app.py`. The app automatically offers baseline and/or transformer models if artifacts exist; BiLSTM evaluation is supported in the CLI and can be extended for demo inference.
+Once trained: `streamlit run app.py`. The app discovers available trained checkpoints in `artifacts/`; restore trained weights before launching the demo.
 
 ## Files
 
 - `src/movie_sentiment/`: dataset, preprocessing, EDA, models, evaluation, errors, inference, CLI
 - `configs/default.yaml`: reproducibility and hyperparameters
 - `tests/`: fast unit tests (no external dataset needed)
-- `report/Project_Report.pdf`: project report with honest pending-results status
-- `results/README.md`: instructions for adding measured results
+- `report/Project_Report.pdf`: final report with actual measured results
+- `results/`: measured metric files, plots and error-analysis CSVs
 - `scripts/build_submission.py`: create single ZIP with source and PDF
 
 ## Submission
 
-When ready: `python scripts/build_submission.py`. This creates `submission/IMDb_Movie_Reviews_NLP_Submission.zip` (relative to the repo root), containing source and `report/Project_Report.pdf`; model weights and datasets are excluded. Before submission verify all team registration numbers and replace pending-results text with actual metrics/figures after experiments.
+When ready: `python scripts/build_submission.py`. This creates `submission/IMDb_Movie_Reviews_NLP_Submission.zip` (relative to the repo root), containing source and `report/Project_Report.pdf`; model weights and datasets are excluded. Before submission verify all team registration numbers. The report already includes actual metrics and figures.
 
 ## License and dataset
 
 IMDb reviews dataset from Stanford / Maas et al. (ACL 2011); DistilBERT: Sanh et al. (2019). Refer to model/dataset licenses and acknowledge their sources. This student project does not claim novel model architectures.
 
-## Step-by-step: Google Colab training (recommended)
 
-1. Open a new notebook at https://colab.research.google.com and select **Runtime > Change runtime type > T4 GPU** (if available). For the baseline, CPU is sufficient. Download the Kaggle CSV separately and upload it in Colab; use the exact path `data/IMDB Dataset.csv`.
-2. In a notebook cell, clone the public repository and install its packages:
+## Verified actual results (Kaggle IMDb test set: n=9,916)
 
-   ```python
-   !git clone https://github.com/madhu328/Analysis_on_Movie_Reviews.git
-   %cd Analysis_on_Movie_Reviews
-   !pip install -e '.[deep,demo,test]'
-   !mkdir -p data
-   from google.colab import files
-   uploaded = files.upload()  # select IMDB Dataset.csv
-   import shutil
-   shutil.move('IMDB Dataset.csv', 'data/IMDB Dataset.csv')
-   ```
+| Model | Accuracy | Precision | Recall | Positive F1 |
+|---|---:|---:|---:|---:|
+| TF-IDF + Logistic Regression | 90.81% | 90.31% | 91.52% | 90.91% |
+| BiLSTM | 87.74% | 86.88% | 89.01% | 87.93% |
+| DistilBERT | **92.16%** | **91.70%** | **92.79%** | **92.24%** |
 
-3. Run the training stages separately. **You must actually execute these cells**; downloading source code does not train the models.
+The `results/` folder contains the measured comparison, confusion matrices, metric JSON files and tagged misclassification CSVs. Sarcasm/contrast/negation tags are heuristic. The test partition was held out from fitting and model selection.
 
-   ```python
-   !imdb-sentiment eda
-   !imdb-sentiment baseline
-   !imdb-sentiment lstm
-   !imdb-sentiment transformer
-   !imdb-sentiment compare
-   !imdb-sentiment errors
-   ```
+### Running the trained demo without retraining
 
-   All commands use `configs/default.yaml`. A GPU is strongly recommended for the LSTM and especially DistilBERT. Actual runtime depends on hardware and dataset download speed. By default the LSTM trains embeddings from scratch; for the specified word-vector comparison, supply an independently downloaded **GloVe 100-dimensional** text file and update `lstm.pretrained_vectors` in the YAML before LSTM training.
+1. Install: `pip install -e ".[deep,demo,test]"`.
+2. Restore the trained Google Drive backup folder `IMDb_NLP_Artifacts` to project-relative `artifacts/`. Model `.pt`, `.joblib`, and Transformer model weights must be present in this folder to enable predictions.
+3. Run `imdb-sentiment compare`, `imdb-sentiment errors`, and `streamlit run app.py`.
+4. On Colab, the command can disappear after a runtime reset; reclone the repository and repeat `pip install -e ".[deep,demo,test]"`, then restore `artifacts/` before running inference.
 
-4. **Keep the generated `artifacts/` directory.** It contains trained checkpoints, test metrics, confusion matrices, error samples and graphs. Colab storage is temporary; download or copy it to Google Drive before the runtime disconnects.
-5. After training, run `!imdb-sentiment compare` and inspect `artifacts/model_comparison.csv` and `artifacts/model_comparison.png`. Copy only the **measured** scores and figures into the final PDF report before course submission. Generate a new ZIP via `!python scripts/build_submission.py` and download it from `submission/`.
+### Final submission
 
-**Avoid re-running the entire training procedure just to launch the app.** Train once, preserve the `artifacts/` folder and reuse it for prediction.
-
-## Step-by-step: run on Windows
-
-Open PowerShell inside the cloned repository:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -e ".[deep,demo,test]"
-pytest -q
-imdb-sentiment baseline
-imdb-sentiment predict --model baseline --text "The film was surprisingly good!"
-streamlit run app.py
-```
-
-Open the local URL printed by Streamlit (usually `http://localhost:8501`). After LSTM/Transformer training, the demo automatically detects their checkpoints and shows all available models.
-
-If PowerShell blocks activation, use `.venv\Scripts\python.exe -m pip install -e ".[deep,demo,test]"` and `.venv\Scripts\python.exe -m streamlit run app.py`, or use Command Prompt activation `.venv\Scripts\activate.bat`.
-
-## Commands / final outputs
-
-| Command | Expected output after successful execution |
-| --- | --- |
-| `imdb-sentiment eda` | `artifacts/eda.png` |
-| `imdb-sentiment baseline` | `artifacts/baseline.joblib`, TF-IDF metrics and errors |
-| `imdb-sentiment lstm` | `artifacts/lstm.pt`, vocabulary, config, BiLSTM metrics |
-| `imdb-sentiment transformer` | `artifacts/distilbert/`, DistilBERT metrics |
-| `imdb-sentiment compare` | `artifacts/model_comparison.csv` and comparison chart |
-| `imdb-sentiment errors` | tagged error CSV files and heuristic summary |
-| `imdb-sentiment predict --model lstm --text "great film"` | JSON with sentiment label and positive probability |
-| `streamlit run app.py` | interactive web UI displaying predictions and model comparison |
-
-For transformer prediction: `imdb-sentiment predict --model transformer --text "An excellent movie"`. For baseline use `--model baseline`. Predictions require their matching trained model checkpoints.
-
-## Before submitting on 16 November 2026, 5:00 PM IST
-
-1. Confirm all four registration numbers (especially Raju's number as provided).
-2. Train all three models without `--limit`, and save the original metric JSON/CSV and figures.
-3. Update the report with the actual measured metrics and representative error examples, rather than leaving the "pending" section.
-4. Build the ZIP with `python scripts/build_submission.py`, unzip once to verify it includes source and `report/Project_Report.pdf`, and submit **one ZIP per group**.
-
-**Not included in the Git repository by default:** datasets, pretrained word-vector archives, model weights/checkpoints and cached downloads (they can be very large). The `artifacts/` directory is generated by training; its absence before training is expected.
-
-## Kaggle CSV workflow and reproducible results
-
-- Expected CSV location: `data/IMDB Dataset.csv`. Required columns: `review` and `sentiment` (`positive`/`negative`).
-- The loader removes duplicate review texts *before splitting*, then creates stratified 72/8/20 train/validation/test partitions using seed 42. It does **not** use the official 25k/25k Stanford split when running with the Kaggle CSV; do not conflate those evaluation protocols.
-- Never modify or tune based on final test scores; tune via validation F1 only.
-- For stronger accuracy try GloVe 100d vectors for LSTM and carefully compare Transformer configurations using the validation split. No accuracy can be guaranteed.
-- Upload the CSV separately to Colab each new session, or mount Google Drive and copy it into `data/`. Never push large data or checkpoints to GitHub.
+The source ZIP includes scripts, the final report PDF and results/ with the measured charts, comparisons, and errors. It excludes the raw Kaggle CSV and trained model weights due to size.

@@ -1,3 +1,1 @@
-# Experiment outputs
-
-Not generated yet because full training is scheduled for a later session. The CLI writes metrics JSON, confusion matrices, classification reports, model comparison CSV/chart and error-analysis CSV into `artifacts/`. After training, copy final tables and plots here for an archival snapshot and update the PDF report. **Do not invent model performance numbers.**
+Measured results from the actual 2026-11-14 IMDb Kaggle experiment. CSV and JSON metric values are decimal proportions; confusion matrices are true label rows 0/1 by predicted label columns 0/1. All error-category flags are heuristic and overlapping. Trained weights and Kaggle source CSV are excluded due to size. See ../report/Project_Report.pdf.

@@ -1,0 +1,28 @@
+{
+  "seed": 42,
+  "debug_limit": null,
+  "dataset": "data/IMDB Dataset.csv",
+  "split": {
+    "train": {
+      "rows": 35695,
+      "labels": {
+        "1": 17914,
+        "0": 17781
+      }
+    },
+    "validation": {
+      "rows": 3967,
+      "labels": {
+        "1": 1991,
+        "0": 1976
+      }
+    },
+    "test": {
+      "rows": 9916,
+      "labels": {
+        "1": 4977,
+        "0": 4939
+      }
+    }
+  }
+}
